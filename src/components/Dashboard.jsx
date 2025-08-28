@@ -17,7 +17,7 @@ import SubcategoryForm from './forms/SubcategoryForm';
 
 const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
-const Dashboard = ({ data, onUpdate, onAddNewSnapshot, onDeleteSnapshot }) => {
+const Dashboard = ({ data, onUpdate, onAddNewSnapshot, onDeleteSnapshot, userName }) => {
   const [selectedDataIndex, setSelectedDataIndex] = useState(0);
   const [modalState, setModalState] = useState({ isOpen: false, type: null, data: null });
   const [targetDate, setTargetDate] = useState(null);
@@ -198,8 +198,8 @@ const Dashboard = ({ data, onUpdate, onAddNewSnapshot, onDeleteSnapshot }) => {
       <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-text">Overview</h1>
-            <p className="text-text-muted">Your financial dashboard</p>
+            <h1 className="text-3xl font-bold text-text">Hey {userName}!</h1>
+            <p className="text-text-muted">Welcome to your personalized net worth tracker!</p>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />

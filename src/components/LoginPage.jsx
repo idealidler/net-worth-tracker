@@ -1,16 +1,31 @@
 // src/components/LoginPage.jsx
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { db } from '../firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const LoginPage = () => {
   const { signInWithGoogle } = useAuth();
 
   const handleSignIn = async () => {
     try {
-      await signInWithGoogle();
-      // The user will be redirected automatically by the App component
+      const { user } = await signInWithGoogle();
+      
+      // Check if the user document already exists
+      const userDocRef = doc(db, "users", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      // If the document doesn't exist, create it with their profile info
+      if (!userDocSnap.exists()) {
+        await setDoc(userDocRef, {
+          displayName: user.displayName,
+          email: user.email,
+          createdAt: new Date()
+        });
+      }
+      
     } catch (error) {
-      console.error("Failed to sign in", error);
+      console.error("Failed to sign in and create user profile", error);
     }
   };
 

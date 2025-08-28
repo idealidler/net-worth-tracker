@@ -1,26 +1,37 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import { db } from './firebase';
-import { collection, doc, getDocs, orderBy, query, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, orderBy, query, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 
 import Dashboard from './components/Dashboard';
 import LoginPage from './components/LoginPage';
-import { netWorthData as initialData } from './data/mockData';
+import { templateData } from './data/templateData';
 
 function App() {
   const { currentUser } = useAuth();
+  const [userProfile, setUserProfile] = useState(null);
   const [netWorthData, setNetWorthData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!currentUser) {
       setNetWorthData([]);
+      setUserProfile(null);
       setLoading(false);
       return;
     }
 
     const fetchData = async () => {
       setLoading(true);
+      
+      // Fetch user profile from the 'users' collection
+      const userDocRef = doc(db, "users", currentUser.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      if (userDocSnap.exists()) {
+        setUserProfile(userDocSnap.data());
+      }
+      
+      // Fetch net worth snapshots for the user
       const snapshotsCollection = collection(db, "users", currentUser.uid, "snapshots");
       const q = query(snapshotsCollection, orderBy("date", "desc"));
       
@@ -28,8 +39,8 @@ function App() {
       const data = querySnapshot.docs.map(doc => doc.data());
 
       if (data.length === 0) {
-        // For a new user, create their first snapshot from the mock data, dated today.
-        const firstSnapshot = { ...initialData[0], date: new Date().toISOString().split('T')[0] };
+        // For a new user, create their first snapshot from the template data
+        const firstSnapshot = { ...templateData[0], date: new Date().toISOString().split('T')[0] };
         await setDoc(doc(db, "users", currentUser.uid, "snapshots", firstSnapshot.date), firstSnapshot);
         setNetWorthData([firstSnapshot]);
       } else {
@@ -46,7 +57,6 @@ function App() {
     const docRef = doc(db, "users", currentUser.uid, "snapshots", newEntryData.date);
     await setDoc(docRef, newEntryData);
     
-    // Update local state to reflect the change immediately
     const updatedData = netWorthData.map(d => d.date === newEntryData.date ? newEntryData : d);
     setNetWorthData(updatedData);
   };
@@ -54,7 +64,6 @@ function App() {
   const handleAddNewSnapshot = async (newDate) => {
     if (!currentUser) return;
 
-    // Use the latest data from state, which is already sorted
     const latestEntry = netWorthData[0];
     const copiedCategories = JSON.parse(JSON.stringify(latestEntry.categories));
     const newSnapshot = { date: newDate, categories: copiedCategories };
@@ -92,6 +101,7 @@ function App() {
           onUpdate={handleUpdateData}
           onAddNewSnapshot={handleAddNewSnapshot}
           onDeleteSnapshot={handleDeleteSnapshot}
+          userName={userProfile?.displayName?.split(' ')[0] || 'User'}
         />
       ) : (
         <LoginPage />
