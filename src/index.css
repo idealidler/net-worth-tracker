@@ -1,0 +1,18 @@
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-background: #ffffff;
+  --color-surface: #f8fafc; /* slate-50 */
+  --color-text-main: #020617;  /* slate-950 */
+  --color-text-muted: #475569; /* slate-600 */
+}
+
+.dark {
+  --color-background: #0D1117;
+  --color-surface: #161B22;
+  --color-text-main: #E6EDF3;
+  --color-text-muted: #8B949E;
+}
