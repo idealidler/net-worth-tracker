@@ -1,3 +1,4 @@
+// src/components/Dashboard.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DocumentPlusIcon, PlusCircleIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -66,7 +67,6 @@ const Dashboard = ({ data, onUpdate, onAddNewSnapshot, onDeleteSnapshot, userNam
     return changes.slice(0, 5);
   }, [data, selectedDataIndex]);
 
-  // Handlers for Trend Modal
   const handleShowCategoryTrend = (categoryId, categoryName) => {
     const trendData = data.map(snapshot => {
       const category = snapshot.categories.find(c => c.id === categoryId);
@@ -93,7 +93,6 @@ const Dashboard = ({ data, onUpdate, onAddNewSnapshot, onDeleteSnapshot, userNam
   
   const closeTrendModal = () => setTrendState({ isOpen: false, data: [], name: '' });
 
-  // Existing Handlers
   const handleDeleteCurrentSnapshot = () => {
     if (data.length <= 1) {
       alert("You cannot delete the last remaining snapshot.");
