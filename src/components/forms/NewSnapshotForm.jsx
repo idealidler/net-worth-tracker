@@ -8,7 +8,7 @@ import { Calendar } from '../ui/Calendar';
 
 const NewSnapshotForm = ({ onSubmit, onCancel }) => {
   const [date, setDate] = useState(new Date());
-  const formRef = useRef(null); // 1. Create a ref
+  const formRef = useRef(null); 
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -16,52 +16,55 @@ const NewSnapshotForm = ({ onSubmit, onCancel }) => {
   };
 
   return (
-    // 2. Attach the ref to the form
-    <form onSubmit={handleSubmit} ref={formRef}>
-      <label className="block text-sm font-medium text-text-muted mb-2">
-        Select a date for the new snapshot:
-      </label>
+    <form onSubmit={handleSubmit} ref={formRef} className="space-y-6">
+      <div>
+        <label className="block text-sm font-semibold text-text-muted mb-3">
+          Select a date for your new snapshot:
+        </label>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className={cn(
-              "w-full justify-start text-left font-normal flex items-center gap-2",
-              "cursor-default rounded-lg bg-surface py-2 px-3 shadow-md border border-text/10",
-              !date && "text-text-muted"
-            )}
-          >
-            <CalendarDaysIcon className="h-5 w-5 text-text-muted" />
-            {date ? format(date, "PPP") : <span>Pick a date</span>}
-          </button>
-        </PopoverTrigger>
-        
-        {/* 3. Use PopoverPortal to control the container */}
-        <PopoverPortal container={formRef.current}>
-          <PopoverContent
-            className="w-auto p-0 z-50 bg-surface rounded-lg border border-text/10 shadow-lg"
-            align="start"
-            sideOffset={4}
-            avoidCollisions={true} // 4. Add collision avoidance
-          >
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(selectedDate) => {
-                if (selectedDate) {
-                  setDate(selectedDate);
-                }
-              }}
-              initialFocus
-            />
-          </PopoverContent>
-        </PopoverPortal>
-      </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-3 text-left font-medium transition-all outline-none",
+                "bg-background border border-text/10 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20",
+                !date ? "text-text-muted" : "text-text"
+              )}
+            >
+              <CalendarDaysIcon className="h-6 w-6 text-primary" />
+              {date ? format(date, "MMMM d, yyyy") : <span>Pick a date</span>}
+            </button>
+          </PopoverTrigger>
+          
+          <PopoverPortal container={formRef.current}>
+            <PopoverContent
+              className="w-auto p-2 z-50 bg-surface rounded-2xl border border-text/10 shadow-xl overflow-hidden"
+              align="start"
+              sideOffset={8}
+              avoidCollisions={true} 
+            >
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(selectedDate) => {
+                  if (selectedDate) setDate(selectedDate);
+                }}
+                initialFocus
+                className="bg-transparent"
+              />
+            </PopoverContent>
+          </PopoverPortal>
+        </Popover>
+      </div>
 
-      <div className="flex justify-end gap-2 mt-4">
-        <button type="button" onClick={onCancel} className="px-4 py-2 rounded bg-text/20 text-text">Cancel</button>
-        <button type="submit" className="px-4 py-2 rounded bg-primary text-background font-bold">Create Snapshot</button>
+      <div className="flex justify-end gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="px-5 py-2.5 rounded-xl font-medium text-text-muted hover:bg-text/5 hover:text-text transition-colors">
+          Cancel
+        </button>
+        <button type="submit" className="px-5 py-2.5 rounded-xl bg-primary text-background font-bold hover:bg-primary-dark hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+          Create Snapshot
+        </button>
       </div>
     </form>
   );

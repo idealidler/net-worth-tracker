@@ -11,23 +11,24 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', ...defaultTheme.fontFamily.sans],
+        mono: ['"JetBrains Mono"', ...defaultTheme.fontFamily.mono],
       },
       colors: {
-        // New, comprehensive color palette
-        background: 'var(--color-background)', // Deep, dark background
-        surface: 'var(--color-surface)',   // Slightly lighter surface for cards
+        /* Let Tailwind dynamically inject the opacity into our RGB variables */
+        background: 'rgb(var(--color-background) / <alpha-value>)', 
+        surface: 'rgb(var(--color-surface) / <alpha-value>)',   
         primary: {
-          DEFAULT: '#22D3EE', // A vibrant cyan
+          DEFAULT: '#22D3EE', 
           light: '#67E8F9',
           dark: '#0E7490',
         },
         accent: {
-          green: '#34D399', // For positive values
-          red: '#F87171',   // For negative values
+          green: '#34D399', 
+          red: '#F87171',   
         },
         text: {
-          DEFAULT: 'var(--color-text-main)', // Main text color
-          muted: 'var(--color-text-muted)',   // Softer text for labels
+          DEFAULT: 'rgb(var(--color-text-main) / <alpha-value>)', 
+          muted: 'rgb(var(--color-text-muted) / <alpha-value>)',   
         },
       },
     },

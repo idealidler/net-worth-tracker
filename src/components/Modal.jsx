@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const Modal = ({ isOpen, onClose, title, children }) => {
   useEffect(() => {
     const handleEsc = (event) => {
-      if (event.keyCode === 27) onClose();
+      if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
@@ -19,19 +19,20 @@ const Modal = ({ isOpen, onClose, title, children }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         >
           <motion.div
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
+            initial={{ y: 20, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -20, opacity: 0, scale: 0.95 }}
+            transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-neutral-800/50 backdrop-blur-xl border border-neutral-700 rounded-lg shadow-xl w-full max-w-md"
+            className="bg-surface border border-text/10 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
           >
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">{title}</h2>
+            <div className="px-6 py-5 border-b border-text/5">
+              <h2 className="text-xl font-bold text-text">{title}</h2>
             </div>
-            <div className="p-4">
+            <div className="p-6">
               {children}
             </div>
           </motion.div>

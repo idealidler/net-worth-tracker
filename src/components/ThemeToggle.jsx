@@ -9,7 +9,7 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 bg-surface rounded-lg text-text-muted hover:text-primary transition-colors"
+      className="p-2 bg-text/5 rounded-xl text-text-muted hover:text-primary hover:bg-primary/10 transition-colors"
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       {theme === 'light' ? (

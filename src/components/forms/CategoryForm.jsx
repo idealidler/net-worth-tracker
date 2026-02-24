@@ -1,3 +1,4 @@
+// src/components/forms/CategoryForm.jsx
 import React, { useState } from 'react';
 
 const CategoryForm = ({ onSubmit, initialData = { name: '' }, onCancel }) => {
@@ -9,18 +10,27 @@ const CategoryForm = ({ onSubmit, initialData = { name: '' }, onCancel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Category Name"
-        className="w-full p-2 border rounded bg-surface border-text/20 text-text"
-        required
-      />
-      <div className="flex justify-end gap-2 mt-4">
-        <button type="button" onClick={onCancel} className="px-4 py-2 rounded bg-text/20 text-text">Cancel</button>
-        <button type="submit" className="px-4 py-2 rounded bg-primary text-background font-bold">Save</button>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <label className="block text-sm font-semibold text-text-muted mb-2">Category Name</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g., Real Estate, Student Loans..."
+          className="w-full px-4 py-3 rounded-xl bg-background border border-text/10 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-text"
+          required
+          autoFocus
+        />
+      </div>
+      
+      <div className="flex justify-end gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="px-5 py-2.5 rounded-xl font-medium text-text-muted hover:bg-text/5 hover:text-text transition-colors">
+          Cancel
+        </button>
+        <button type="submit" className="px-5 py-2.5 rounded-xl bg-primary text-background font-bold hover:bg-primary-dark hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+          Save Category
+        </button>
       </div>
     </form>
   );
