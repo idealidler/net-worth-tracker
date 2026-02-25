@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import { db } from './firebase';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { Analytics } from "@vercel/analytics/react"
 import { motion, AnimatePresence } from 'framer-motion';
 
 import Dashboard from './components/Dashboard';

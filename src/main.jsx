@@ -1,7 +1,7 @@
 // src/main.jsx
 import React from 'react'
-import { Analytics } from "@vercel/analytics/next"
 import ReactDOM from 'react-dom/client'
+import { Analytics } from "@vercel/analytics/react"
 import App from './App.jsx'
 import './index.css'
 import { AuthProvider } from './context/AuthContext.jsx'
