@@ -5,85 +5,126 @@ import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { mockData } from '../data/mockData';
 
-// Check if we are in demo mode
 const isDemo = new URLSearchParams(window.location.search).get('demo') === 'true';
 
-// 1. Hook to FETCH data
+const mockGoals = [
+  { id: 'goal_1', name: 'FIRE Number (Financial Independence)', targetAmount: 1000000, currentAmount: 0, isNetWorthLinked: true, color: 'bg-primary', icon: 'TrophyIcon' },
+  { id: 'goal_2', name: 'House Down Payment', targetAmount: 80000, currentAmount: 35000, isNetWorthLinked: false, color: 'bg-purple-500', icon: 'HomeIcon' },
+  { id: 'goal_3', name: 'Kids College Fund', targetAmount: 50000, currentAmount: 12000, isNetWorthLinked: false, color: 'bg-accent-green', icon: 'AcademicCapIcon' }
+];
+
+// --- SNAPSHOT HOOKS ---
 export const useSnapshots = () => {
   const { currentUser } = useAuth();
-  
   return useQuery({
     queryKey: ['snapshots', currentUser?.uid],
     queryFn: async () => {
-      if (isDemo) return mockData; // Return fake data instantly
+      if (isDemo) return mockData;
       if (!currentUser) return [];
-      
       const q = query(collection(db, "users", currentUser.uid, "snapshots"), orderBy("date", "desc"));
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => doc.data());
     },
-    // Only run this query if we are in demo mode OR the user is logged in
     enabled: isDemo || !!currentUser, 
   });
 };
 
-// 2. Hook to UPDATE data
 export const useUpdateSnapshot = () => {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (updatedSnapshot) => {
-      if (isDemo) {
-        alert("Demo mode: Data cannot be saved to the database.");
-        return;
-      }
+      if (isDemo) throw new Error("Cannot save in demo mode.");
       const docRef = doc(db, "users", currentUser.uid, "snapshots", updatedSnapshot.date);
-      await updateDoc(docRef, { categories: updatedSnapshot.categories });
+      return await updateDoc(docRef, { categories: updatedSnapshot.categories });
     },
-    // When successful, tell React Query to refresh the 'snapshots' cache!
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['snapshots', currentUser?.uid] });
-    }
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['snapshots', currentUser?.uid] }),
+    onError: (err) => console.error("Firebase Snapshot Update Error:", err)
   });
 };
 
-// 3. Hook to ADD data
 export const useAddSnapshot = () => {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (newSnapshot) => {
-      if (isDemo) {
-        alert("Demo mode: Cannot create new snapshots.");
-        return;
-      }
+      if (isDemo) throw new Error("Cannot save in demo mode.");
       const docRef = doc(db, "users", currentUser.uid, "snapshots", newSnapshot.date);
-      await setDoc(docRef, newSnapshot);
+      return await setDoc(docRef, newSnapshot);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['snapshots', currentUser?.uid] });
-    }
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['snapshots', currentUser?.uid] }),
+    onError: (err) => console.error("Firebase Snapshot Add Error:", err)
   });
 };
 
-// 4. Hook to DELETE data
 export const useDeleteSnapshot = () => {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (dateToDelete) => {
-      if (isDemo) {
-        alert("Demo mode: Cannot delete snapshots.");
-        return;
-      }
+      if (isDemo) throw new Error("Cannot delete in demo mode.");
       const docRef = doc(db, "users", currentUser.uid, "snapshots", dateToDelete);
-      await deleteDoc(docRef);
+      return await deleteDoc(docRef);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['snapshots', currentUser?.uid] });
-    }
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['snapshots', currentUser?.uid] }),
+    onError: (err) => console.error("Firebase Snapshot Delete Error:", err)
+  });
+};
+
+// --- GOAL HOOKS ---
+export const useGoals = () => {
+  const { currentUser } = useAuth();
+  return useQuery({
+    queryKey: ['goals', currentUser?.uid],
+    queryFn: async () => {
+      if (isDemo) return mockGoals;
+      if (!currentUser) return [];
+      const q = query(collection(db, "users", currentUser.uid, "goals"));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => doc.data());
+    },
+    enabled: isDemo || !!currentUser, 
+  });
+};
+
+export const useAddGoal = () => {
+  const { currentUser } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (newGoal) => {
+      if (isDemo) throw new Error("Cannot save data in Demo Mode.");
+      const docRef = doc(db, "users", currentUser.uid, "goals", newGoal.id);
+      return await setDoc(docRef, newGoal);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals', currentUser?.uid] }),
+    onError: (err) => console.error("Firebase Goal Add Error:", err)
+  });
+};
+
+export const useUpdateGoal = () => {
+  const { currentUser } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (updatedGoal) => {
+      if (isDemo) throw new Error("Cannot save data in Demo Mode.");
+      const docRef = doc(db, "users", currentUser.uid, "goals", updatedGoal.id);
+      return await updateDoc(docRef, updatedGoal);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals', currentUser?.uid] }),
+    onError: (err) => console.error("Firebase Goal Update Error:", err)
+  });
+};
+
+export const useDeleteGoal = () => {
+  const { currentUser } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (goalId) => {
+      if (isDemo) throw new Error("Cannot delete data in Demo Mode.");
+      const docRef = doc(db, "users", currentUser.uid, "goals", goalId);
+      return await deleteDoc(docRef);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals', currentUser?.uid] }),
+    onError: (err) => console.error("Firebase Goal Delete Error:", err)
   });
 };

@@ -3,7 +3,15 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useTheme } from '../context/ThemeContext';
 
-const COLORS = ['#06B6D4', '#6366F1', '#EC4899', '#8B5CF6', '#14B8A6', '#F59E0B', '#3B82F6'];
+// Replace the old COLORS array with this one:
+const COLORS = [
+  '#6366F1', // Indigo
+  '#14B8A6', // Teal
+  '#8B5CF6', // Violet
+  '#F59E0B', // Amber
+  '#F43F5E', // Rose
+  '#0EA5E9'  // Sky
+];
 
 const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 

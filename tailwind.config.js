@@ -14,22 +14,25 @@ export default {
         mono: ['"JetBrains Mono"', ...defaultTheme.fontFamily.mono],
       },
       colors: {
-        /* Let Tailwind dynamically inject the opacity into our RGB variables */
+        /* Mapped to our raw RGB CSS variables for dynamic opacity support */
         background: 'rgb(var(--color-background) / <alpha-value>)', 
         surface: 'rgb(var(--color-surface) / <alpha-value>)',   
         primary: {
-          DEFAULT: '#22D3EE', 
-          light: '#67E8F9',
-          dark: '#0E7490',
+          DEFAULT: 'rgb(var(--color-primary) / <alpha-value>)', 
         },
         accent: {
-          green: '#34D399', 
-          red: '#F87171',   
+          green: 'rgb(var(--color-asset) / <alpha-value>)', 
+          red: 'rgb(var(--color-liability) / <alpha-value>)',   
         },
         text: {
           DEFAULT: 'rgb(var(--color-text-main) / <alpha-value>)', 
           muted: 'rgb(var(--color-text-muted) / <alpha-value>)',   
         },
+      },
+      keyframes: {
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        }
       },
     },
   },

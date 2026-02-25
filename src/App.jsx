@@ -41,13 +41,16 @@ function App() {
       return;
     }
 
-    // Now App.jsx ONLY fetches the user profile, not all the massive snapshot data!
     const fetchProfile = async () => {
       setLoading(true);
       const userDocRef = doc(db, "users", currentUser.uid);
       const userDocSnap = await getDoc(userDocRef);
+      
       if (userDocSnap.exists()) {
         setUserProfile(userDocSnap.data());
+      } else {
+        // THE FIX: Safely catch brand new users so the app doesn't freeze
+        setUserProfile({ onboardingComplete: false });
       }
       setLoading(false);
     };
@@ -65,10 +68,7 @@ function App() {
     });
 
     const today = new Date().toISOString().split('T')[0];
-    const initialSnapshot = {
-      ...templateData[0],
-      date: today
-    };
+    const initialSnapshot = { ...templateData[0], date: today };
 
     const snapshotDocRef = doc(db, "users", currentUser.uid, "snapshots", today);
     await setDoc(snapshotDocRef, initialSnapshot);
@@ -107,7 +107,6 @@ function App() {
     if (userProfile && userProfile.onboardingComplete) {
       return (
         <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-          {/* LOOK HOW CLEAN THIS IS! No more prop-drilling 5 different functions down! */}
           <Dashboard userName={userProfile?.displayName || 'User'} />
         </motion.div>
       );
