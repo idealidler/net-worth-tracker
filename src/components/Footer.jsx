@@ -1,19 +1,31 @@
 // src/components/Footer.jsx
-import React from 'react';
-import { EnvelopeIcon } from '@heroicons/react/24/outline';
+import React, { useState } from 'react';
+import { EnvelopeIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import PrivacyModal from './PrivacyModal';
 
 const Footer = () => {
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+
   return (
-    <footer className="mt-16 pt-8 pb-12 border-t border-text/5 flex flex-col md:flex-row items-center justify-between gap-6 w-full">
+    <footer className="mt-16 pt-8 pb-12 border-t border-text/5 flex flex-col md:flex-row items-center md:items-start justify-between gap-8 w-full">
       
       {/* Left Side: Personal Brand & Message */}
-      <div className="text-center md:text-left">
+      <div className="text-center md:text-left flex flex-col items-center md:items-start">
         <p className="text-sm font-medium text-text-muted">
           Architected & Engineered by <span className="font-extrabold text-text tracking-wide">Akshay Jain</span>
         </p>
-        <p className="text-xs text-text-muted/60 mt-1.5 max-w-md">
+        <p className="text-xs text-text-muted/60 mt-1.5 max-w-md leading-relaxed">
           I built this to push the boundaries of modern fintech UX. I would absolutely love to connect, talk architecture, and hear your feedback!
         </p>
+        
+        {/* 1% Upgrade: The Privacy & Security Trigger */}
+        <button 
+          onClick={() => setIsPrivacyModalOpen(true)}
+          className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-text-muted hover:text-primary transition-colors group"
+        >
+          <ShieldCheckIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          Click here for Privacy & Security Architecture
+        </button>
       </div>
 
       {/* Right Side: Social Links */}
@@ -53,6 +65,12 @@ const Footer = () => {
           <EnvelopeIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
         </a>
       </div>
+
+      {/* Render the Modal */}
+      <PrivacyModal 
+        isOpen={isPrivacyModalOpen} 
+        onClose={() => setIsPrivacyModalOpen(false)} 
+      />
     </footer>
   );
 };
