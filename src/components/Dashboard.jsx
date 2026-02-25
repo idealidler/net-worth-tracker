@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   DocumentPlusIcon, PlusCircleIcon, TrashIcon, 
   ChartPieIcon, BookOpenIcon, ClockIcon, TrophyIcon,
-  PencilSquareIcon, HomeIcon, AcademicCapIcon, SparklesIcon, RocketLaunchIcon, ChartBarIcon
+  PencilSquareIcon, HomeIcon, AcademicCapIcon, SparklesIcon, 
+  RocketLaunchIcon, ChartBarIcon, ArrowUturnLeftIcon, 
+  CheckCircleIcon, XMarkIcon
 } from '@heroicons/react/24/outline';
 import { CurrencyDollarIcon, BanknotesIcon, CreditCardIcon } from '@heroicons/react/24/solid';
 
@@ -46,6 +48,9 @@ const Dashboard = ({ userName }) => {
   const [modalState, setModalState] = useState({ isOpen: false, type: null, data: null });
   const [targetDate, setTargetDate] = useState(null);
   const [trendState, setTrendState] = useState({ isOpen: false, data: [], name: '' });
+  
+  // 1% Upgrade: Educational banner state
+  const [showNewSnapshotBanner, setShowNewSnapshotBanner] = useState(false);
 
   const historyScrollRef = useRef(null);
 
@@ -61,7 +66,14 @@ const Dashboard = ({ userName }) => {
     if (!data) return;
     if (targetDate) {
       const newIndex = data.findIndex(d => d.date === targetDate);
-      if (newIndex !== -1) { setSelectedDataIndex(newIndex); setTargetDate(null); setActiveTab('overview'); }
+      if (newIndex !== -1) { 
+        setSelectedDataIndex(newIndex); 
+        setTargetDate(null); 
+        
+        // 1% Upgrade: Auto-route to the Ledger and show the educational banner
+        setActiveTab('ledger'); 
+        setShowNewSnapshotBanner(true);
+      }
     } else if (selectedDataIndex >= data.length) {
       setSelectedDataIndex(Math.max(0, data.length - 1));
     }
@@ -94,7 +106,6 @@ const Dashboard = ({ userName }) => {
     return { assets, liabilities, netWorth: assets + liabilities };
   };
 
-  // --- 1% Upgrade: Total Assets and Liabilities Trend Handlers ---
   const handleShowTotalAssetsTrend = () => {
     const trendData = data.map(snapshot => {
       let value = 0;
@@ -239,6 +250,7 @@ const Dashboard = ({ userName }) => {
 
   const currentData = data[selectedDataIndex];
   const { assets: totalAssets, liabilities: totalLiabilities, netWorth } = getSnapshotTotals(currentData);
+  const isViewingHistory = selectedDataIndex !== 0;
 
   const daysSinceLastSnapshot = Math.floor((new Date() - new Date(data[0].date)) / (1000 * 60 * 60 * 24));
   const isStale = daysSinceLastSnapshot > 30;
@@ -272,7 +284,21 @@ const Dashboard = ({ userName }) => {
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <span className="text-sm font-medium text-text-muted">Position as of:</span>
               <span className="px-2.5 py-1 bg-text/5 text-text rounded-md font-mono text-sm font-bold border border-text/10 shadow-sm">{currentData.date}</span>
-              <span className="hidden sm:inline-block text-xs text-text-muted pl-2 sm:pl-3 border-l border-text/10">Real-time asset valuation</span>
+              
+              {/* 1% Upgrade: The Return to Latest Anchor */}
+              {isViewingHistory && (
+                <button 
+                  onClick={() => { setSelectedDataIndex(0); setActiveTab('overview'); }}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-background rounded-md text-xs font-bold transition-all border border-primary/20 shadow-sm"
+                >
+                  <ArrowUturnLeftIcon className="w-3.5 h-3.5" />
+                  Return to Latest
+                </button>
+              )}
+
+              {!isViewingHistory && (
+                <span className="hidden sm:inline-block text-xs text-text-muted pl-2 sm:pl-3 border-l border-text/10">Real-time asset valuation</span>
+              )}
             </div>
           </div>
 
@@ -417,6 +443,33 @@ const Dashboard = ({ userName }) => {
             {activeTab === 'ledger' && (
               <div className="flex flex-col gap-6">
                 
+                {/* 1% Upgrade: Educational Auto-Route Banner */}
+                <AnimatePresence>
+                  {showNewSnapshotBanner && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex items-start sm:items-center gap-3 bg-accent-green/10 border border-accent-green/20 p-4 rounded-2xl shadow-sm relative overflow-hidden"
+                    >
+                      <div className="p-2 bg-accent-green/20 rounded-xl shrink-0">
+                        <CheckCircleIcon className="w-6 h-6 text-accent-green" />
+                      </div>
+                      <div className="pr-8">
+                        <p className="text-sm font-medium text-text leading-relaxed">
+                          <span className="font-extrabold text-accent-green tracking-wide">Snapshot Created!</span> You have been brought to The Ledger. Update your asset and liability values below to reflect your current numbers for <span className="font-bold">{currentData.date}</span>.
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => setShowNewSnapshotBanner(false)} 
+                        className="absolute top-4 right-4 p-1 text-text-muted hover:text-text hover:bg-text/5 rounded-lg transition-colors"
+                      >
+                        <XMarkIcon className="w-5 h-5" />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div className="flex items-start sm:items-center gap-3 bg-primary/5 border border-primary/20 p-4 rounded-2xl shadow-sm">
                   <div className="p-2 bg-primary/10 rounded-xl shrink-0">
                     <ChartBarIcon className="w-5 h-5 text-primary" />
@@ -427,7 +480,6 @@ const Dashboard = ({ userName }) => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                  {/* --- 1% Upgrade: Clickable Assets Header --- */}
                   <div className="space-y-6">
                      <div className="flex justify-between items-end border-b border-text/10 pb-4">
                        <div className="group cursor-pointer" onClick={handleShowTotalAssetsTrend}>
@@ -448,7 +500,6 @@ const Dashboard = ({ userName }) => {
                      </div>
                   </div>
                   
-                  {/* --- 1% Upgrade: Clickable Liabilities Header --- */}
                   <div className="space-y-6">
                      <div className="flex justify-between items-end border-b border-text/10 pb-4">
                        <div className="group cursor-pointer" onClick={handleShowTotalLiabilitiesTrend}>
