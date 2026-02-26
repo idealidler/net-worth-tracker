@@ -5,11 +5,16 @@ import { PencilSquareIcon, TrashIcon, PlusCircleIcon, CheckIcon, XMarkIcon, Chev
 
 const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
-const CategoryCard = ({ category, onUpdateCategory, onDeleteCategory, onSelectCategory, onSelectSubcategory }) => {
+// ADDED groupTotal = 0 to the props
+const CategoryCard = ({ category, groupTotal = 0, onUpdateCategory, onDeleteCategory, onSelectCategory, onSelectSubcategory }) => {
   const isAsset = category.type === 'asset';
   const colorClass = isAsset ? 'text-accent-green' : 'text-accent-red';
   const bgClass = isAsset ? 'bg-accent-green' : 'bg-accent-red';
+  
   const categoryTotal = category.subcategories.reduce((sum, sub) => sum + Math.abs(sub.value), 0);
+  
+  // BI Logic: Category % of Total Assets/Liabilities
+  const categoryPercentage = groupTotal > 0 ? (categoryTotal / groupTotal) * 100 : 0;
 
   // --- UI States ---
   const [isExpanded, setIsExpanded] = useState(true);
@@ -77,7 +82,7 @@ const CategoryCard = ({ category, onUpdateCategory, onDeleteCategory, onSelectCa
   return (
     <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="premium-card p-0 overflow-hidden group/card border border-text/5 hover:border-text/10 transition-colors">
       
-      {/* 1% Upgrade: Clickable Header with Expand/Collapse */}
+      {/* HEADER SECTION */}
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
         className={`flex justify-between items-center p-5 cursor-pointer select-none transition-colors duration-300 ${isExpanded ? 'border-b border-text/5 bg-surface' : 'bg-text/[0.02] hover:bg-text/[0.04]'}`}
@@ -102,7 +107,16 @@ const CategoryCard = ({ category, onUpdateCategory, onDeleteCategory, onSelectCa
               >
                 {category.name}
               </button>
-              <p className={`font-mono text-lg font-extrabold mt-0.5 ${colorClass}`}>{formatCurrency(categoryTotal)}</p>
+              <div className="flex items-center gap-3 mt-0.5">
+                <p className={`font-mono text-lg font-extrabold ${colorClass}`}>{formatCurrency(categoryTotal)}</p>
+                
+                {/* 1% Upgrade: Category % of Total Portfolio Badge */}
+                {groupTotal > 0 && (
+                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider bg-text/5 px-2 py-0.5 rounded-md border border-text/5">
+                    {categoryPercentage.toFixed(1)}% of Total
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -122,7 +136,6 @@ const CategoryCard = ({ category, onUpdateCategory, onDeleteCategory, onSelectCa
             </div>
           )}
           
-          {/* The Accordion Arrow */}
           <div className="h-6 w-px bg-text/10 mx-1 hidden sm:block"></div>
           <div className={`p-1.5 rounded-xl transition-transform duration-300 text-text-muted ${isExpanded ? 'rotate-180' : ''}`}>
             <ChevronDownIcon className="w-5 h-5" />
@@ -130,7 +143,7 @@ const CategoryCard = ({ category, onUpdateCategory, onDeleteCategory, onSelectCa
         </div>
       </div>
 
-      {/* SUBCATEGORIES LIST (With smooth animation) */}
+      {/* SUBCATEGORIES LIST */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -141,6 +154,8 @@ const CategoryCard = ({ category, onUpdateCategory, onDeleteCategory, onSelectCa
           >
             <div className="p-5 space-y-5">
               {category.subcategories.map((sub, index) => {
+                
+                // BI Logic: Subcategory % of Category Total
                 const subPercentage = categoryTotal > 0 ? (Math.abs(sub.value) / categoryTotal) * 100 : 0;
                 const isEditingThis = editingSubId === sub.id;
                 
@@ -172,8 +187,17 @@ const CategoryCard = ({ category, onUpdateCategory, onDeleteCategory, onSelectCa
                           <button onClick={() => onSelectSubcategory(sub.id, sub.name)} className="font-semibold text-text-muted text-left hover:text-primary transition-colors truncate pr-4">
                             {sub.name}
                           </button>
+                          
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="font-mono font-bold text-text">{formatCurrency(Math.abs(sub.value))}</span>
+                            <div className="flex items-center gap-2.5">
+                              {/* 1% Upgrade: Subcategory % text indicator */}
+                              <span className="text-[11px] font-semibold text-text-muted opacity-70 w-10 text-right">
+                                {subPercentage.toFixed(1)}%
+                              </span>
+                              <span className="font-mono font-bold text-text w-20 text-right">
+                                {formatCurrency(Math.abs(sub.value))}
+                              </span>
+                            </div>
                             
                             {/* Hover Actions */}
                             <div className="flex opacity-0 -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all duration-200">

@@ -19,6 +19,7 @@ import TrendModal from './TrendModal';
 import NetWorthChart from './NetWorthChart';
 import AllocationChart from './AllocationChart';
 import BiggestMoversChart from './BiggestMoversChart';
+import InsightsTab from './InsightsTab';
 import CategoryCard from './CategoryCard';
 import ThemeToggle from './ThemeToggle';
 import NewSnapshotForm from './forms/NewSnapshotForm';
@@ -48,8 +49,6 @@ const Dashboard = ({ userName }) => {
   const [modalState, setModalState] = useState({ isOpen: false, type: null, data: null });
   const [targetDate, setTargetDate] = useState(null);
   const [trendState, setTrendState] = useState({ isOpen: false, data: [], name: '' });
-  
-  // 1% Upgrade: Educational banner state
   const [showNewSnapshotBanner, setShowNewSnapshotBanner] = useState(false);
 
   const historyScrollRef = useRef(null);
@@ -69,8 +68,6 @@ const Dashboard = ({ userName }) => {
       if (newIndex !== -1) { 
         setSelectedDataIndex(newIndex); 
         setTargetDate(null); 
-        
-        // 1% Upgrade: Auto-route to the Ledger and show the educational banner
         setActiveTab('ledger'); 
         setShowNewSnapshotBanner(true);
       }
@@ -249,9 +246,11 @@ const Dashboard = ({ userName }) => {
   }
 
   const currentData = data[selectedDataIndex];
+  
+  // BI Logic: These values are calculated to pass down as groupTotals
   const { assets: totalAssets, liabilities: totalLiabilities, netWorth } = getSnapshotTotals(currentData);
+  
   const isViewingHistory = selectedDataIndex !== 0;
-
   const daysSinceLastSnapshot = Math.floor((new Date() - new Date(data[0].date)) / (1000 * 60 * 60 * 24));
   const isStale = daysSinceLastSnapshot > 30;
 
@@ -263,6 +262,7 @@ const Dashboard = ({ userName }) => {
 
   const tabs = [
     { id: 'overview', name: 'Overview', icon: ChartPieIcon },
+    { id: 'insights', name: 'Insights', icon: SparklesIcon },
     { id: 'ledger', name: 'The Ledger', icon: BookOpenIcon },
     { id: 'goals', name: 'Goals', icon: TrophyIcon },
     { id: 'history', name: 'History', icon: ClockIcon },
@@ -276,48 +276,29 @@ const Dashboard = ({ userName }) => {
       </Modal>
       <TrendModal isOpen={trendState.isOpen} onClose={() => setTrendState({ isOpen: false, data: [], name: '' })} data={trendState.data} name={trendState.name} />
       
-      <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
+      <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto min-h-[90vh] flex flex-col">
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-6">
-          
           <div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-text tracking-tight mb-2">Statement of Financial Position</h1>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <span className="text-sm font-medium text-text-muted">Position as of:</span>
               <span className="px-2.5 py-1 bg-text/5 text-text rounded-md font-mono text-sm font-bold border border-text/10 shadow-sm">{currentData.date}</span>
-              
-              {/* 1% Upgrade: The Return to Latest Anchor */}
               {isViewingHistory && (
-                <button 
-                  onClick={() => { setSelectedDataIndex(0); setActiveTab('overview'); }}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-background rounded-md text-xs font-bold transition-all border border-primary/20 shadow-sm"
-                >
-                  <ArrowUturnLeftIcon className="w-3.5 h-3.5" />
-                  Return to Latest
+                <button onClick={() => { setSelectedDataIndex(0); setActiveTab('overview'); }} className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-background rounded-md text-xs font-bold transition-all border border-primary/20 shadow-sm">
+                  <ArrowUturnLeftIcon className="w-3.5 h-3.5" /> Return to Latest
                 </button>
               )}
-
-              {!isViewingHistory && (
-                <span className="hidden sm:inline-block text-xs text-text-muted pl-2 sm:pl-3 border-l border-text/10">Real-time asset valuation</span>
-              )}
+              {!isViewingHistory && <span className="hidden sm:inline-block text-xs text-text-muted pl-2 sm:pl-3 border-l border-text/10">Real-time asset valuation</span>}
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 bg-surface p-2 rounded-2xl shadow-sm border border-text/5">
             <ThemeToggle />
             <div className="h-6 w-px bg-text/10 mx-1"></div>
-            
-            <button 
-              onClick={() => setModalState({ isOpen: true, type: 'newSnapshot' })} 
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all shadow-sm ${
-                isStale 
-                  ? 'bg-primary text-background ring-4 ring-primary/20 animate-pulse' 
-                  : 'bg-primary text-background hover:brightness-110'
-              }`}
-            >
+            <button onClick={() => setModalState({ isOpen: true, type: 'newSnapshot' })} className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all shadow-sm ${isStale ? 'bg-primary text-background ring-4 ring-primary/20 animate-pulse' : 'bg-primary text-background hover:brightness-110'}`}>
               <PlusCircleIcon className="w-5 h-5" />
               <span className="hidden sm:inline">Log Snapshot</span>
             </button>
-            
             <div className="h-6 w-px bg-text/10 mx-1"></div>
             <button onClick={handleExit} className="px-4 py-2 bg-transparent text-text-muted hover:text-accent-red hover:bg-accent-red/10 rounded-xl font-semibold text-sm transition-colors">{isDemo ? 'Exit Demo' : 'Sign Out'}</button>
           </div>
@@ -325,254 +306,260 @@ const Dashboard = ({ userName }) => {
 
         <div className="flex space-x-1 bg-surface border border-text/5 p-1 rounded-2xl mb-8 w-fit shadow-sm overflow-x-auto max-w-full custom-scrollbar">
           {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-background text-primary shadow-sm border border-text/5' : 'text-text-muted hover:text-text hover:bg-text/5'}`}>
+            <button 
+              key={tab.id} 
+              onClick={() => setActiveTab(tab.id)} 
+              // UX Upgrade: Added cursor-pointer
+              className={`cursor-pointer flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-background text-primary shadow-sm border border-text/5' : 'text-text-muted hover:text-text hover:bg-text/5'}`}
+            >
               <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? 'text-primary' : 'text-text-muted'}`} />{tab.name}
             </button>
           ))}
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div key={activeTab + currentData.date} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-            
-            {activeTab === 'overview' && (
-              <div className="space-y-6 sm:space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {stats.map((stat, i) => (
-                    <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1, duration: 0.5 }} className="premium-card flex items-center gap-5">
-                      <div className={`p-4 rounded-2xl ${stat.bg}`}><stat.icon className={`w-8 h-8 ${stat.iconColor}`} /></div>
-                      <div>
-                        <p className="text-sm font-semibold text-text-muted mb-1">{stat.label}</p>
-                        <AnimatedCounter value={stat.value} className={`text-3xl font-bold font-mono ${stat.color}`} />
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2 premium-card flex flex-col">
-                    <h3 className="text-xl font-bold text-text mb-6">Net Worth Trend</h3>
-                    
-                    {data.length === 1 ? (
-                      <div className="flex-1 min-h-[350px] w-full flex flex-col items-center justify-center border-2 border-dashed border-text/10 rounded-2xl bg-text/[0.02] p-8 text-center">
-                        <ChartBarIcon className="w-12 h-12 text-text-muted/30 mb-4" />
-                        <h4 className="text-lg font-bold text-text">Insufficient Data for Trend Analysis</h4>
-                        <p className="text-text-muted text-sm max-w-sm mt-2 leading-relaxed">Wealth tracking requires time. Log a second snapshot next month to visualize your trajectory and unlock predictive analytics.</p>
-                      </div>
-                    ) : (
-                      <div className="flex-1 min-h-[350px] w-full"><NetWorthChart data={data} /></div>
-                    )}
-
+        <div className="flex-1">
+          <AnimatePresence mode="wait">
+            <motion.div key={activeTab + currentData.date} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+              
+              {activeTab === 'overview' && (
+                <div className="space-y-6 sm:space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {stats.map((stat, i) => (
+                      <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1, duration: 0.5 }} className="premium-card flex items-center gap-5">
+                        <div className={`p-4 rounded-2xl ${stat.bg}`}><stat.icon className={`w-8 h-8 ${stat.iconColor}`} /></div>
+                        <div>
+                          <p className="text-sm font-semibold text-text-muted mb-1">{stat.label}</p>
+                          <AnimatedCounter value={stat.value} className={`text-3xl font-bold font-mono ${stat.color}`} />
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
-                  <div className="lg:col-span-1 premium-card flex flex-col">
-                    <h3 className="text-xl font-bold text-text mb-6">Asset Allocation</h3>
-                    <div className="flex-1 min-h-[350px] w-full flex items-center justify-center"><AllocationChart data={currentData.categories} /></div>
-                  </div>
-                </div>
 
-                {data.length > 1 && topMovers && topMovers.length > 0 && (
-                  <div className="premium-card">
-                    <h3 className="text-xl font-bold text-text mb-6">Recent Changes (Since Last Snapshot)</h3>
-                    <div className="h-[350px] w-full"><BiggestMoversChart data={topMovers} /></div>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 premium-card flex flex-col">
+                      <h3 className="text-xl font-bold text-text mb-6">Net Worth Trend</h3>
+                      {data.length === 1 ? (
+                        <div className="flex-1 min-h-[350px] w-full flex flex-col items-center justify-center border-2 border-dashed border-text/10 rounded-2xl bg-text/[0.02] p-8 text-center">
+                          <ChartBarIcon className="w-12 h-12 text-text-muted/30 mb-4" />
+                          <h4 className="text-lg font-bold text-text">Insufficient Data for Trend Analysis</h4>
+                          <p className="text-text-muted text-sm max-w-sm mt-2 leading-relaxed">Wealth tracking requires time. Log a second snapshot next month to visualize your trajectory and unlock predictive analytics.</p>
+                        </div>
+                      ) : (
+                        <div className="flex-1 min-h-[350px] w-full"><NetWorthChart data={data} /></div>
+                      )}
+                    </div>
+                    <div className="lg:col-span-1 premium-card flex flex-col">
+                      <h3 className="text-xl font-bold text-text mb-6">Asset Allocation</h3>
+                      <div className="flex-1 min-h-[350px] w-full flex items-center justify-center"><AllocationChart data={currentData.categories} /></div>
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
 
-            {activeTab === 'goals' && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-end border-b border-text/10 pb-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-text">Financial Milestones</h2>
-                    <p className="text-text-muted text-sm mt-1">Track your progress towards your biggest targets.</p>
-                  </div>
-                  <button onClick={() => setModalState({ isOpen: true, type: 'newGoal' })} className="flex items-center gap-2 text-sm font-semibold text-primary bg-primary/10 px-4 py-2 rounded-xl hover:bg-primary hover:text-background transition-colors">
-                    <PlusCircleIcon className="w-5 h-5" /> Add Goal
-                  </button>
-                </div>
-
-                {!goals || goals.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4"><TrophyIcon className="w-10 h-10 text-primary" /></div>
-                    <h3 className="text-xl font-bold text-text mb-2">No goals set yet</h3>
-                    <p className="text-text-muted max-w-sm mb-6">Give your money a purpose. Set a target for a house, car, or your ultimate financial independence number.</p>
-                    <button onClick={() => setModalState({ isOpen: true, type: 'newGoal' })} className="px-5 py-2.5 bg-primary text-background font-bold rounded-xl shadow-lg hover:-translate-y-0.5 transition-all">Create First Goal</button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {goals.map((goal, index) => {
-                      const currentProgress = goal.isNetWorthLinked ? netWorth : goal.currentAmount;
-                      const rawPercentage = (currentProgress / goal.targetAmount) * 100;
-                      const percentage = Math.max(0, Math.min(rawPercentage, 100));
-                      const GoalIcon = ICONS[goal.icon] || TrophyIcon;
-                      const isGoalMet = currentProgress >= goal.targetAmount;
-
-                      return (
-                        <motion.div key={goal.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.1 }} className="premium-card relative overflow-hidden group">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className={`p-3 rounded-2xl ${goal.color} bg-opacity-20`}>
-                              <GoalIcon className={`w-7 h-7 ${goal.color.replace('bg-', 'text-')}`} />
-                            </div>
-                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => setModalState({ isOpen: true, type: 'editGoal', data: goal })} className="p-1.5 bg-text/5 rounded-xl text-text-muted hover:text-primary transition-colors"><PencilSquareIcon className="w-4 h-4" /></button>
-                              <button onClick={() => handleDeleteGoal(goal.id)} className="p-1.5 bg-text/5 rounded-xl text-text-muted hover:text-accent-red transition-colors"><TrashIcon className="w-4 h-4" /></button>
-                            </div>
-                          </div>
-                          <h3 className="text-xl font-bold text-text">{goal.name}</h3>
-                          {goal.isNetWorthLinked && <span className="inline-block mt-1 px-2 py-0.5 bg-text/5 text-text-muted text-[10px] uppercase font-bold tracking-wider rounded-md">Auto-Linked to Net Worth</span>}
-                          <div className="flex items-end gap-2 mt-4 mb-3">
-                            <span className={`text-3xl font-mono font-extrabold ${isGoalMet ? 'text-accent-green' : 'text-text'}`}>{formatCurrency(currentProgress)}</span>
-                            <span className="text-text-muted font-medium mb-1">/ {formatCurrency(goal.targetAmount)}</span>
-                          </div>
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm font-semibold text-text-muted">Progress</span>
-                            <span className={`font-mono font-bold ${isGoalMet ? 'text-accent-green' : 'text-text'}`}>{rawPercentage.toFixed(1)}%</span>
-                          </div>
-                          <div className="w-full bg-text/5 rounded-full h-2.5 overflow-hidden">
-                            <motion.div initial={{ width: 0 }} animate={{ width: `${percentage}%` }} transition={{ duration: 1.2, ease: "easeOut" }} className={`h-full rounded-full relative ${isGoalMet ? 'bg-accent-green' : goal.color}`}>
-                               <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2s_infinite]"></div>
-                            </motion.div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'ledger' && (
-              <div className="flex flex-col gap-6">
-                
-                {/* 1% Upgrade: Educational Auto-Route Banner */}
-                <AnimatePresence>
-                  {showNewSnapshotBanner && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }} 
-                      animate={{ opacity: 1, y: 0 }} 
-                      exit={{ opacity: 0, height: 0 }}
-                      className="flex items-start sm:items-center gap-3 bg-accent-green/10 border border-accent-green/20 p-4 rounded-2xl shadow-sm relative overflow-hidden"
-                    >
-                      <div className="p-2 bg-accent-green/20 rounded-xl shrink-0">
-                        <CheckCircleIcon className="w-6 h-6 text-accent-green" />
-                      </div>
-                      <div className="pr-8">
-                        <p className="text-sm font-medium text-text leading-relaxed">
-                          <span className="font-extrabold text-accent-green tracking-wide">Snapshot Created!</span> You have been brought to The Ledger. Update your asset and liability values below to reflect your current numbers for <span className="font-bold">{currentData.date}</span>.
-                        </p>
-                      </div>
-                      <button 
-                        onClick={() => setShowNewSnapshotBanner(false)} 
-                        className="absolute top-4 right-4 p-1 text-text-muted hover:text-text hover:bg-text/5 rounded-lg transition-colors"
-                      >
-                        <XMarkIcon className="w-5 h-5" />
-                      </button>
-                    </motion.div>
+                  {data.length > 1 && topMovers && topMovers.length > 0 && (
+                    <div className="premium-card">
+                      <h3 className="text-xl font-bold text-text mb-6">Recent Changes (Since Last Snapshot)</h3>
+                      <div className="h-[350px] w-full"><BiggestMoversChart data={topMovers} /></div>
+                    </div>
                   )}
-                </AnimatePresence>
-
-                <div className="flex items-start sm:items-center gap-3 bg-primary/5 border border-primary/20 p-4 rounded-2xl shadow-sm">
-                  <div className="p-2 bg-primary/10 rounded-xl shrink-0">
-                    <ChartBarIcon className="w-5 h-5 text-primary" />
-                  </div>
-                  <p className="text-sm font-medium text-text leading-relaxed">
-                    <span className="font-extrabold text-primary tracking-wide">Tip: </span> 
-                    Navigate to History tab to delete these default records.
-                    Click on the Assets/Liabilities headers, category below to instantly generate a historical trend chart. 
-                    
-                  </p>
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                  <div className="space-y-6">
-                     <div className="flex justify-between items-end border-b border-text/10 pb-4">
-                       <div className="group cursor-pointer" onClick={handleShowTotalAssetsTrend}>
-                         <div className="flex items-center gap-3">
-                           <h2 className="text-2xl font-bold text-text group-hover:text-primary transition-colors">Assets</h2>
-                           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-primary bg-primary/10 px-2 py-1 rounded-md">
-                             <ChartBarIcon className="w-3.5 h-3.5" /> Trend
-                           </div>
-                         </div>
-                         <p className="text-text-muted text-sm mt-1">What you own</p>
-                       </div>
-                       <button onClick={() => handleAddNewCategory('asset')} className="flex items-center gap-2 text-sm font-semibold text-primary bg-primary/10 px-4 py-2 rounded-xl hover:bg-primary hover:text-background transition-colors"><PlusCircleIcon className="w-5 h-5" /> Add Category</button>
-                     </div>
-                     <div className="space-y-4">
-                       {currentData.categories.filter(c => c.type === 'asset').map(category => (
-                         <CategoryCard key={category.id} category={category} onUpdateCategory={handleUpdateCategory} onDeleteCategory={() => handleDeleteCategory(category.id)} onSelectCategory={handleShowCategoryTrend} onSelectSubcategory={handleShowSubcategoryTrend} />
-                       ))}
-                     </div>
-                  </div>
-                  
-                  <div className="space-y-6">
-                     <div className="flex justify-between items-end border-b border-text/10 pb-4">
-                       <div className="group cursor-pointer" onClick={handleShowTotalLiabilitiesTrend}>
-                         <div className="flex items-center gap-3">
-                           <h2 className="text-2xl font-bold text-text group-hover:text-primary transition-colors">Liabilities</h2>
-                           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-primary bg-primary/10 px-2 py-1 rounded-md">
-                             <ChartBarIcon className="w-3.5 h-3.5" /> Trend
-                           </div>
-                         </div>
-                         <p className="text-text-muted text-sm mt-1">What you owe</p>
-                       </div>
-                       <button onClick={() => handleAddNewCategory('liability')} className="flex items-center gap-2 text-sm font-semibold text-accent-red bg-accent-red/10 px-4 py-2 rounded-xl hover:bg-accent-red hover:text-white transition-colors"><PlusCircleIcon className="w-5 h-5" /> Add Category</button>
-                     </div>
-                     <div className="space-y-4">
-                       {currentData.categories.filter(c => c.type === 'liability').map(category => (
-                         <CategoryCard key={category.id} category={category} onUpdateCategory={handleUpdateCategory} onDeleteCategory={() => handleDeleteCategory(category.id)} onSelectCategory={handleShowCategoryTrend} onSelectSubcategory={handleShowSubcategoryTrend} />
-                       ))}
-                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
+              {activeTab === 'insights' && (
+                <InsightsTab snapshots={data} goals={goals} />
+              )}
 
-            {activeTab === 'history' && (
-              <div className="premium-card p-0 border border-text/5 overflow-hidden flex flex-col relative">
-                <div ref={historyScrollRef} className="overflow-y-auto overflow-x-auto max-h-[65vh] custom-scrollbar">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="sticky top-0 z-20 bg-surface/95 backdrop-blur-md shadow-sm border-b border-text/10">
-                      <tr>
-                        <th className="p-5 font-bold text-text-muted text-xs uppercase tracking-wider whitespace-nowrap">Date</th>
-                        <th className="p-5 font-bold text-text-muted text-xs uppercase tracking-wider text-right whitespace-nowrap">Assets</th>
-                        <th className="p-5 font-bold text-text-muted text-xs uppercase tracking-wider text-right whitespace-nowrap">Liabilities</th>
-                        <th className="p-5 font-bold text-text-muted text-xs uppercase tracking-wider text-right whitespace-nowrap">Net Worth</th>
-                        <th className="p-5 font-bold text-text-muted text-xs uppercase tracking-wider text-center whitespace-nowrap">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-text/5">
-                      {data.map((snap, index) => {
-                        const totals = getSnapshotTotals(snap);
-                        const isCurrent = index === selectedDataIndex;
+              {activeTab === 'goals' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-end border-b border-text/10 pb-4">
+                    <div>
+                      <h2 className="text-2xl font-bold text-text">Financial Milestones</h2>
+                      <p className="text-text-muted text-sm mt-1">Track your progress towards your biggest targets.</p>
+                    </div>
+                    <button onClick={() => setModalState({ isOpen: true, type: 'newGoal' })} className="flex items-center gap-2 text-sm font-semibold text-primary bg-primary/10 px-4 py-2 rounded-xl hover:bg-primary hover:text-background transition-colors">
+                      <PlusCircleIcon className="w-5 h-5" /> Add Goal
+                    </button>
+                  </div>
+
+                  {!goals || goals.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4"><TrophyIcon className="w-10 h-10 text-primary" /></div>
+                      <h3 className="text-xl font-bold text-text mb-2">No goals set yet</h3>
+                      <p className="text-text-muted max-w-sm mb-6">Give your money a purpose. Set a target for a house, car, or your ultimate financial independence number.</p>
+                      <button onClick={() => setModalState({ isOpen: true, type: 'newGoal' })} className="px-5 py-2.5 bg-primary text-background font-bold rounded-xl shadow-lg hover:-translate-y-0.5 transition-all">Create First Goal</button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {goals.map((goal, index) => {
+                        const currentProgress = goal.isNetWorthLinked ? netWorth : goal.currentAmount;
+                        const rawPercentage = (currentProgress / goal.targetAmount) * 100;
+                        const percentage = Math.max(0, Math.min(rawPercentage, 100));
+                        const GoalIcon = ICONS[goal.icon] || TrophyIcon;
+                        const isGoalMet = currentProgress >= goal.targetAmount;
+
                         return (
-                          <tr key={snap.date} className={`group transition-all duration-200 even:bg-text/[0.02] hover:bg-text/[0.06] ${isCurrent ? 'bg-primary/5 even:bg-primary/5 border-l-4 border-l-primary' : 'border-l-4 border-l-transparent'}`}>
-                            <td className="p-5 font-semibold text-text flex items-center gap-3 whitespace-nowrap">
-                              {snap.date} 
-                              {isCurrent && <span className="text-[10px] bg-primary text-background px-2.5 py-0.5 rounded-full uppercase tracking-widest font-bold shadow-sm">Active</span>}
-                            </td>
-                            <td className="p-5 font-mono text-accent-green text-right whitespace-nowrap">{formatCurrency(totals.assets)}</td>
-                            <td className="p-5 font-mono text-accent-red text-right whitespace-nowrap">{formatCurrency(Math.abs(totals.liabilities))}</td>
-                            <td className="p-5 font-mono font-extrabold text-text text-right whitespace-nowrap">{formatCurrency(totals.netWorth)}</td>
-                            <td className="p-5 flex justify-center items-center gap-2 whitespace-nowrap">
-                              <button onClick={() => { setSelectedDataIndex(index); setActiveTab('overview'); }} className={`px-4 py-1.5 text-sm font-bold rounded-lg transition-all ${isCurrent ? 'bg-primary text-background shadow-md' : 'bg-text/5 text-text-muted hover:bg-primary hover:text-background hover:shadow-md'}`}>
-                                {isCurrent ? 'Viewing' : 'View'}
-                              </button>
-                              <button onClick={() => handleDeleteSnapshot(snap.date)} className="p-1.5 bg-text/5 text-text-muted hover:bg-accent-red hover:text-white rounded-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100" title="Delete Snapshot">
-                                <TrashIcon className="w-5 h-5" />
-                              </button>
-                            </td>
-                          </tr>
+                          <motion.div key={goal.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.1 }} className="premium-card relative overflow-hidden group">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className={`p-3 rounded-2xl ${goal.color} bg-opacity-20`}>
+                                <GoalIcon className={`w-7 h-7 ${goal.color.replace('bg-', 'text-')}`} />
+                              </div>
+                              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => setModalState({ isOpen: true, type: 'editGoal', data: goal })} className="p-1.5 bg-text/5 rounded-xl text-text-muted hover:text-primary transition-colors"><PencilSquareIcon className="w-4 h-4" /></button>
+                                <button onClick={() => handleDeleteGoal(goal.id)} className="p-1.5 bg-text/5 rounded-xl text-text-muted hover:text-accent-red transition-colors"><TrashIcon className="w-4 h-4" /></button>
+                              </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-text">{goal.name}</h3>
+                            {goal.isNetWorthLinked && <span className="inline-block mt-1 px-2 py-0.5 bg-text/5 text-text-muted text-[10px] uppercase font-bold tracking-wider rounded-md">Auto-Linked to Net Worth</span>}
+                            <div className="flex items-end gap-2 mt-4 mb-3">
+                              <span className={`text-3xl font-mono font-extrabold ${isGoalMet ? 'text-accent-green' : 'text-text'}`}>{formatCurrency(currentProgress)}</span>
+                              <span className="text-text-muted font-medium mb-1">/ {formatCurrency(goal.targetAmount)}</span>
+                            </div>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-semibold text-text-muted">Progress</span>
+                              <span className={`font-mono font-bold ${isGoalMet ? 'text-accent-green' : 'text-text'}`}>{rawPercentage.toFixed(1)}%</span>
+                            </div>
+                            <div className="w-full bg-text/5 rounded-full h-2.5 overflow-hidden">
+                              <motion.div initial={{ width: 0 }} animate={{ width: `${percentage}%` }} transition={{ duration: 1.2, ease: "easeOut" }} className={`h-full rounded-full relative ${isGoalMet ? 'bg-accent-green' : goal.color}`}>
+                                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2s_infinite]"></div>
+                              </motion.div>
+                            </div>
+                          </motion.div>
                         );
                       })}
-                    </tbody>
-                  </table>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-            
-          </motion.div>
-        </AnimatePresence>
+              )}
 
-        {activeTab === 'overview' && <Footer />}
+              {activeTab === 'ledger' && (
+                <div className="flex flex-col gap-6">
+                  <AnimatePresence>
+                    {showNewSnapshotBanner && (
+                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} className="flex items-start sm:items-center gap-3 bg-accent-green/10 border border-accent-green/20 p-4 rounded-2xl shadow-sm relative overflow-hidden">
+                        <div className="p-2 bg-accent-green/20 rounded-xl shrink-0"><CheckCircleIcon className="w-6 h-6 text-accent-green" /></div>
+                        <div className="pr-8"><p className="text-sm font-medium text-text leading-relaxed"><span className="font-extrabold text-accent-green tracking-wide">Snapshot Created!</span> You have been brought to The Ledger. Update your asset and liability values below to reflect your current numbers for <span className="font-bold">{currentData.date}</span>.</p></div>
+                        <button onClick={() => setShowNewSnapshotBanner(false)} className="absolute top-4 right-4 p-1 text-text-muted hover:text-text hover:bg-text/5 rounded-lg transition-colors"><XMarkIcon className="w-5 h-5" /></button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="flex items-start sm:items-center gap-3 bg-primary/5 border border-primary/20 p-4 rounded-2xl shadow-sm">
+                    <div className="p-2 bg-primary/10 rounded-xl shrink-0"><ChartBarIcon className="w-5 h-5 text-primary" /></div>
+                    <p className="text-sm font-medium text-text leading-relaxed"><span className="font-extrabold text-primary tracking-wide">Pro Tip:</span> Click on the Assets/Liabilities headers, any category, or specific item below to instantly generate a historical trend chart.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <div className="space-y-6">
+                       <div className="flex justify-between items-end border-b border-text/10 pb-4">
+                         <div className="group cursor-pointer" onClick={handleShowTotalAssetsTrend}>
+                           <div className="flex items-center gap-3">
+                             <h2 className="text-2xl font-bold text-text group-hover:text-primary transition-colors">Assets</h2>
+                             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-primary bg-primary/10 px-2 py-1 rounded-md">
+                               <ChartBarIcon className="w-3.5 h-3.5" /> Trend
+                             </div>
+                           </div>
+                           <p className="text-text-muted text-sm mt-1">What you own</p>
+                         </div>
+                         <button onClick={() => handleAddNewCategory('asset')} className="flex items-center gap-2 text-sm font-semibold text-primary bg-primary/10 px-4 py-2 rounded-xl hover:bg-primary hover:text-background transition-colors"><PlusCircleIcon className="w-5 h-5" /> Add Category</button>
+                       </div>
+                       <div className="space-y-4">
+                         {/* Passing totalAssets down for BI % calculations */}
+                         {currentData.categories.filter(c => c.type === 'asset').map(category => (
+                           <CategoryCard 
+                             key={category.id} 
+                             category={category} 
+                             groupTotal={totalAssets} 
+                             onUpdateCategory={handleUpdateCategory} 
+                             onDeleteCategory={() => handleDeleteCategory(category.id)} 
+                             onSelectCategory={handleShowCategoryTrend} 
+                             onSelectSubcategory={handleShowSubcategoryTrend} 
+                           />
+                         ))}
+                       </div>
+                    </div>
+                    
+                    <div className="space-y-6">
+                       <div className="flex justify-between items-end border-b border-text/10 pb-4">
+                         <div className="group cursor-pointer" onClick={handleShowTotalLiabilitiesTrend}>
+                           <div className="flex items-center gap-3">
+                             <h2 className="text-2xl font-bold text-text group-hover:text-primary transition-colors">Liabilities</h2>
+                             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-primary bg-primary/10 px-2 py-1 rounded-md">
+                               <ChartBarIcon className="w-3.5 h-3.5" /> Trend
+                             </div>
+                           </div>
+                           <p className="text-text-muted text-sm mt-1">What you owe</p>
+                         </div>
+                         <button onClick={() => handleAddNewCategory('liability')} className="flex items-center gap-2 text-sm font-semibold text-accent-red bg-accent-red/10 px-4 py-2 rounded-xl hover:bg-accent-red hover:text-white transition-colors"><PlusCircleIcon className="w-5 h-5" /> Add Category</button>
+                       </div>
+                       <div className="space-y-4">
+                         {/* Passing Math.abs(totalLiabilities) down for BI % calculations */}
+                         {currentData.categories.filter(c => c.type === 'liability').map(category => (
+                           <CategoryCard 
+                             key={category.id} 
+                             category={category} 
+                             groupTotal={Math.abs(totalLiabilities)} 
+                             onUpdateCategory={handleUpdateCategory} 
+                             onDeleteCategory={() => handleDeleteCategory(category.id)} 
+                             onSelectCategory={handleShowCategoryTrend} 
+                             onSelectSubcategory={handleShowSubcategoryTrend} 
+                           />
+                         ))}
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'history' && (
+                <div className="premium-card p-0 border border-text/5 overflow-hidden flex flex-col relative">
+                  <div ref={historyScrollRef} className="overflow-y-auto overflow-x-auto max-h-[65vh] custom-scrollbar">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="sticky top-0 z-20 bg-surface/95 backdrop-blur-md shadow-sm border-b border-text/10">
+                        <tr>
+                          <th className="p-5 font-bold text-text-muted text-xs uppercase tracking-wider whitespace-nowrap">Date</th>
+                          <th className="p-5 font-bold text-text-muted text-xs uppercase tracking-wider text-right whitespace-nowrap">Assets</th>
+                          <th className="p-5 font-bold text-text-muted text-xs uppercase tracking-wider text-right whitespace-nowrap">Liabilities</th>
+                          <th className="p-5 font-bold text-text-muted text-xs uppercase tracking-wider text-right whitespace-nowrap">Net Worth</th>
+                          <th className="p-5 font-bold text-text-muted text-xs uppercase tracking-wider text-center whitespace-nowrap">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-text/5">
+                        {data.map((snap, index) => {
+                          const totals = getSnapshotTotals(snap);
+                          const isCurrent = index === selectedDataIndex;
+                          return (
+                            <tr key={snap.date} className={`group transition-all duration-200 even:bg-text/[0.02] hover:bg-text/[0.06] ${isCurrent ? 'bg-primary/5 even:bg-primary/5 border-l-4 border-l-primary' : 'border-l-4 border-l-transparent'}`}>
+                              <td className="p-5 font-semibold text-text flex items-center gap-3 whitespace-nowrap">
+                                {snap.date} 
+                                {isCurrent && <span className="text-[10px] bg-primary text-background px-2.5 py-0.5 rounded-full uppercase tracking-widest font-bold shadow-sm">Active</span>}
+                              </td>
+                              <td className="p-5 font-mono text-accent-green text-right whitespace-nowrap">{formatCurrency(totals.assets)}</td>
+                              <td className="p-5 font-mono text-accent-red text-right whitespace-nowrap">{formatCurrency(Math.abs(totals.liabilities))}</td>
+                              <td className="p-5 font-mono font-extrabold text-text text-right whitespace-nowrap">{formatCurrency(totals.netWorth)}</td>
+                              <td className="p-5 flex justify-center items-center gap-2 whitespace-nowrap">
+                                <button onClick={() => { setSelectedDataIndex(index); setActiveTab('overview'); }} className={`px-4 py-1.5 text-sm font-bold rounded-lg transition-all ${isCurrent ? 'bg-primary text-background shadow-md' : 'bg-text/5 text-text-muted hover:bg-primary hover:text-background hover:shadow-md'}`}>
+                                  {isCurrent ? 'Viewing' : 'View'}
+                                </button>
+                                <button onClick={() => handleDeleteSnapshot(snap.date)} className="p-1.5 bg-text/5 text-text-muted hover:bg-accent-red hover:text-white rounded-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100" title="Delete Snapshot">
+                                  <TrashIcon className="w-5 h-5" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* DISTRACTION FREE MODE: Footer only renders on the overview tab */}
+        {activeTab === 'overview' && (
+          <div className="mt-8">
+            <Footer />
+          </div>
+        )}
       </div>
     </>
   );
