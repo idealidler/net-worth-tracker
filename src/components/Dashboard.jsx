@@ -24,7 +24,7 @@ import ThemeToggle from './ThemeToggle';
 import NewSnapshotForm from './forms/NewSnapshotForm';
 import GoalForm from './forms/GoalForm';
 import AnimatedCounter from './AnimatedCounter';
-import Footer from '/Users/akshayjain/Documents/net-worth-tracker/src/components/footer';
+import Footer from './Footer';
 
 const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 
