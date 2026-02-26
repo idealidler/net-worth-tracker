@@ -24,7 +24,7 @@ import ThemeToggle from './ThemeToggle';
 import NewSnapshotForm from './forms/NewSnapshotForm';
 import GoalForm from './forms/GoalForm';
 import AnimatedCounter from './AnimatedCounter';
-import Footer from './Footer';
+import Footer from '/Users/akshayjain/Documents/net-worth-tracker/src/components/footer';
 
 const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 
@@ -475,7 +475,10 @@ const Dashboard = ({ userName }) => {
                     <ChartBarIcon className="w-5 h-5 text-primary" />
                   </div>
                   <p className="text-sm font-medium text-text leading-relaxed">
-                    <span className="font-extrabold text-primary tracking-wide">Pro Tip:</span> Click on the Assets/Liabilities headers, any category, or specific item below to instantly generate a historical trend chart.
+                    <span className="font-extrabold text-primary tracking-wide">Tip: </span> 
+                    Navigate to History tab to delete these default records.
+                    Click on the Assets/Liabilities headers, category below to instantly generate a historical trend chart. 
+                    
                   </p>
                 </div>
 
@@ -569,7 +572,7 @@ const Dashboard = ({ userName }) => {
           </motion.div>
         </AnimatePresence>
 
-        <Footer />
+        {activeTab === 'overview' && <Footer />}
       </div>
     </>
   );
