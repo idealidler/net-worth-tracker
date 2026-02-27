@@ -20,7 +20,6 @@ import NetWorthChart from './NetWorthChart';
 import AllocationChart from './AllocationChart';
 import BiggestMoversChart from './BiggestMoversChart';
 import InsightsTab from './InsightsTab';
-import PaydayWidget from './PaydayWidget';
 import CategoryCard from './CategoryCard';
 import ThemeToggle from './ThemeToggle';
 import NewSnapshotForm from './forms/NewSnapshotForm';
@@ -324,8 +323,6 @@ const Dashboard = ({ userName }) => {
               
               {activeTab === 'overview' && (
                 <div className="space-y-6 sm:space-y-8">
-                  {/* --- NEW PAYDAY WIDGET --- */}
-                  <PaydayWidget />
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {stats.map((stat, i) => (
                       <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1, duration: 0.5 }} className="premium-card flex items-center gap-5">
