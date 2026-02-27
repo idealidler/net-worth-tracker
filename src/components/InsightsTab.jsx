@@ -32,7 +32,7 @@ const InsightsTab = ({ snapshots, goals }) => {
           if (cat.type === 'asset') assets += catTotal;
           else liabilities += catTotal;
         });
-        return { assets, liabilities, netWorth: assets - liabilities };
+        return { assets, liabilities, netWorth: assets + liabilities };
       };
 
       const current = getTotals(snapshots[0]);
