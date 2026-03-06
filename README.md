@@ -4,7 +4,7 @@
 
 **A professional-grade financial dashboard for dynamic ledger management and wealth analytics.**
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-networthdesign.vercel.app-20232A?style=for-the-badge&logo=vercel)](https://networthdesign.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-networthguide.vercel.app-20232A?style=for-the-badge&logo=vercel)](https://networthguide.vercel.app/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](#)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](#)
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=white)](#)
